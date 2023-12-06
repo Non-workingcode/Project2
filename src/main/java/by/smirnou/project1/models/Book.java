@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 
@@ -39,9 +40,11 @@ public class Book {
     private Person owner;
 
     @Column(name = "time_take_book")
-    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     private Date timeTakeBook;
+
+    @Transient
+    private boolean expired; //Hibernate не будет замечать этого поля, что нам и нужно. По-умолчанию false
 
     public Book(){}
 
@@ -97,5 +100,13 @@ public class Book {
 
     public void setYear(int year) {
         this.year = year;
+    }
+
+    public boolean isExpired() {
+        return expired;
+    }
+
+    public void setExpired(boolean expired) {
+        this.expired = expired;
     }
 }

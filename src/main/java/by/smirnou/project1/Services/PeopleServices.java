@@ -20,12 +20,10 @@ import java.util.*;
 public class PeopleServices {
 
     private final PeopleRepository peopleRepository;
-    private final BooksRepository booksRepository;
 
     @Autowired
-    public PeopleServices(PeopleRepository peopleRepository, BooksRepository booksRepository) {
+    public PeopleServices(PeopleRepository peopleRepository) {
         this.peopleRepository = peopleRepository;
-        this.booksRepository = booksRepository;
     }
 
     public List<Person> findAll(){
@@ -48,9 +46,9 @@ public class PeopleServices {
     }
 
     @Transactional
-    public Person update(int id, Person person){
-        person.setId(id);
-        return peopleRepository.save(person);
+    public Person update(int id, Person updatedPerson){
+        updatedPerson.setId(id);
+        return peopleRepository.save(updatedPerson);
     }
 
     @Transactional
@@ -58,17 +56,19 @@ public class PeopleServices {
         peopleRepository.deleteById(id);
     }
 
-
-
-    public boolean checkBook(Book book){
-        Date startDate = Date.from(book.getTimeTakeBook().toInstant());
-        Date plusTenDays = Date.from(book.getTimeTakeBook().toInstant().plus(10, ChronoUnit.DAYS));
-        Duration duration = Duration.between(startDate.toInstant(),plusTenDays.toInstant());
-        if(duration.getSeconds() - duration.getSeconds() >1){
-            return false;
-        }
-        return true;
+    public Optional<Person> getPersonByFIO(String FIO){
+        return  peopleRepository.findByFIO(FIO);
     }
+
+//    public boolean checkBook(Book book){
+//        Date startDate = Date.from(book.getTimeTakeBook().toInstant());
+//        Date plusTenDays = Date.from(book.getTimeTakeBook().toInstant().plus(10, ChronoUnit.DAYS));
+//        Duration duration = Duration.between(startDate.toInstant(),plusTenDays.toInstant());
+//        if(duration.getSeconds() - duration.getSeconds() >1){
+//            return false;
+//        }
+//        return true;
+//    }
 
 
     public List<Book> getBooksByPersonId(int id) {
@@ -76,7 +76,18 @@ public class PeopleServices {
 
         if (person.isPresent()) {
             Hibernate.initialize(person.get().getBooks());
+            //Мы внизу итерируемся по книгам, поэтому они точно будут загружены, но на всякий случай
+            //не мешает всегда вызвать Hibernate.initializer()
+            //(на случай, например, если код в дальнейшем поменяется и итерация по книгам удалится)
+            person.get().getBooks().forEach(book -> {
+                //Math.abs нужно для того чтобы результат был абсолютным
+                long diffInMilles = Math.abs(book.getTimeTakeBook().getTime() - new Date().getTime());
+                //864000000 милисекунд = 10 суток
+                if(diffInMilles > 864000000)
+                    book.setExpired(true); // книга просрочена
+            });
             return person.get().getBooks();
+
         } else {
             return Collections.emptyList();
         }

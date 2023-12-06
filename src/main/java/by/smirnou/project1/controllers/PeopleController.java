@@ -2,7 +2,7 @@ package by.smirnou.project1.controllers;
 
 import by.smirnou.project1.Services.PeopleServices;
 
-import by.smirnou.project1.util.PersonValidator;
+
 import jakarta.validation.Valid;
 import by.smirnou.project1.models.Person;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,13 +17,20 @@ import org.springframework.web.bind.annotation.*;
 public class PeopleController {
 
     private final PeopleServices peopleServices;
-    private final PersonValidator personValidator;
 
+
+
+
+//    @Autowired
+//    public PeopleController(PeopleServices peopleServices , PersonValidator personValidator) {
+//        this.peopleServices = peopleServices;
+//        this.personValidator = personValidator;
+//    }
 
     @Autowired
-    public PeopleController(PeopleServices peopleServices , PersonValidator personValidator) {
+    public PeopleController(PeopleServices peopleServices ) {
         this.peopleServices = peopleServices;
-        this.personValidator = personValidator;
+
     }
 
     @GetMapping()
@@ -35,8 +42,7 @@ public class PeopleController {
     @GetMapping("/{id}")
     public String show(@PathVariable("id") int id, Model model) {
         model.addAttribute("person", peopleServices.findOne(id));
-        model.addAttribute("person", peopleServices.getBooksByPersonId(id));
-        model.addAttribute("person", peopleServices.getBooksByPersonId(id));
+        model.addAttribute("books", peopleServices.getBooksByPersonId(id));;
 
         return "/people/show";
     }
@@ -49,7 +55,7 @@ public class PeopleController {
     @PostMapping
     public String create(@ModelAttribute("person") @Valid Person person ,
                          BindingResult bindingResult){
-        personValidator.validate(person,bindingResult);
+//        personValidator.validate(person,bindingResult);
         if (bindingResult.hasErrors()){
             return "/people/new";
         }
